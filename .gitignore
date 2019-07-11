@@ -1,0 +1,7 @@
+.vs/
+packages/
+Blockgame/bin/
+Blockgame/obj/
+
+packages.config
+OpenTK.dll.config
