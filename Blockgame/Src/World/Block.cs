@@ -7,7 +7,8 @@ namespace Blockgame.World
         Debug = 0,
         Stone,
         Grass,
-        Dirt
+        Dirt,
+        NumberOfBlocks
     }
 
     public class Block
@@ -18,9 +19,9 @@ namespace Blockgame.World
             Disabled = disabled;
             
         }
-        public bool Disabled { get; set; } = false;
+        public bool Disabled { get; set; }
 
-        public BlockType Type { get; set; } = BlockType.Debug;
+        public BlockType Type { get; set; }
 
     }
 }

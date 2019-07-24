@@ -33,8 +33,6 @@ namespace Blockgame.Windowing
             
         }
 
-
-
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
 

@@ -10,6 +10,7 @@ namespace Blockgame.Events
         {
             Key = keyCode;
         }
+
     }
 
     public class KeyReleaseEvent : Event
@@ -19,5 +20,6 @@ namespace Blockgame.Events
         {
             Key = keyCode;
         }
+
     }
 }

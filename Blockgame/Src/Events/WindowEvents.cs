@@ -18,8 +18,8 @@ namespace Blockgame.Events
     {
         public WindowClosingEvent()
         {
-            // nothing special
         }
+
 
     }
 }

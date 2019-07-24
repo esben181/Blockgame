@@ -72,7 +72,8 @@
     <Compile Include="src\World\BlockMesh.cs" />
     <Compile Include="src\Program.cs" />
     <Compile Include="src\Resources\Shader.cs" />
-    <Compile Include="src\Windowing\EventCallbacks.cs" />
+    <Compile Include="src\Windowing\Callbacks.cs" />
+    <Compile Include="src\World\ChunkManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

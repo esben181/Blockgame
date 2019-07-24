@@ -39,14 +39,16 @@ namespace Blockgame.Layers
         {
             foreach (var layer in _layers)
             {
-                layer.Update(deltaTime);
+                if (!layer.Disabled)
+                    layer.Update(deltaTime);
             }
         }
         public void Render()
         {
             foreach (var layer in _layers)
             {
-                layer.Render();
+                if (!layer.Disabled)
+                    layer.Render(); 
             }
         }
         public void OnEvent(Event @event)
@@ -56,8 +58,11 @@ namespace Blockgame.Layers
             // should receive the event first.
             for (var i = _layers.Count-1; i > -1; --i)
             {
-                _layers[i].OnEvent(@event);
+                if (!_layers[i].Disabled)
+                    _layers[i].OnEvent(@event);
+
             }
         }
+
     }
 }

@@ -1,13 +1,12 @@
-﻿using System;
-using Blockgame.Windowing;
+﻿using Blockgame.Windowing;
 
 namespace Blockgame
 {
-    class Program
+    public class Program
     {
         static void Main()
         {
-            using (var game = new Window(600, 800, "Blockgame"))
+            using (var game = new Window(800, 600, "Blockgame"))
             {
                 game.Run();
             }

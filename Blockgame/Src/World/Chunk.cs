@@ -9,21 +9,31 @@ namespace Blockgame.World
 {
     public class Chunk : IDisposable
     {
-        public readonly static int Size = 32;
+        public readonly static int Size = 16;
 
         BlockMesh _mesh = new BlockMesh();
 
-        private Block[,,] _blocks = new Block[Size, Size, Size];
+        Block[,,] _blocks = new Block[Size, Size, Size];
 
-        private int _vao;
-        private VertexBuffer _vbo;
+        int _vao;
+        VertexBuffer _vbo;
 
         bool _disposed = false;
-
-
-        bool _needsRebuild = false;
+        
+        bool _wasModified = false;
 
         public Chunk()
+        {
+            Setup(BlockType.Debug);
+
+            _vao = GL.GenVertexArray();
+
+            _vbo = new VertexBuffer();
+
+            GenerateMesh();
+        }
+
+        public void Setup(BlockType blockType)
         {
             // Generate map
             for (int x = 0; x < Size; ++x)
@@ -33,42 +43,20 @@ namespace Blockgame.World
                     for (int y = 0; y < Size; ++y)
                     {
                         _blocks[x, y, z] = new Block();
-                        if (Math.Sqrt((float)(x - Size / 2) * (x - Size / 2) + (y - Size / 2) * (y - Size / 2) + (z - Size / 2) * (z - Size / 2)) <= Size / 2)
+                        //if (Math.Sqrt((float)(x - Size / 2) * (x - Size / 2) + (y - Size / 2) * (y - Size / 2) + (z - Size / 2) * (z - Size / 2)) <= Size / 2)
                         {
-                            if (x > 6)
-                                _blocks[x, y, z].Type = BlockType.Stone;
-                            if (x > 8)
-                                _blocks[x, y, z].Type = BlockType.Grass;
-
-                            if (x > 10)
-                                _blocks[x, y, z].Type = BlockType.Dirt;
                             _blocks[x, y, z].Disabled = false;
-
+                            _blocks[x, y, z].Type = blockType;
+                             
                         }
-                    }
+                    } 
                 }
             }
-
-            _vao = GL.GenVertexArray();
-            GL.BindVertexArray(_vao);
-
-            _vbo = new VertexBuffer();
-
-            GenerateMesh();
-
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 0, 0);
-            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 0, sizeof(float) * _mesh.Positions.Count);
-            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 0, sizeof(float) * (_mesh.Positions.Count + _mesh.Normals.Count));
-            GL.VertexAttribPointer(3, 1, VertexAttribPointerType.Float, false, sizeof(float) * 0, sizeof(float) * (_mesh.Positions.Count + _mesh.Normals.Count + _mesh.TexCoords.Count));
-            GL.EnableVertexAttribArray(0);
-            GL.EnableVertexAttribArray(1);
-            GL.EnableVertexAttribArray(2);
-            GL.EnableVertexAttribArray(3);
-
-         } 
+        }
 
         public void GenerateMesh()
         {
+
             _mesh.ClearData();
             for (var x = 0; x < Size; ++x)
             {
@@ -92,29 +80,37 @@ namespace Blockgame.World
                     }
                 }
             }
+            GL.BindVertexArray(_vao);
 
             _vbo.Bind();
-            int bufferSize = sizeof(float) * (_mesh.Positions.Count + _mesh.Normals.Count + _mesh.TexCoords.Count + _mesh.TextureId.Count);
-            GL.BufferData(BufferTarget.ArrayBuffer, bufferSize, new float[bufferSize], BufferUsageHint.StreamDraw);
+            int bufferSize = sizeof(float) * (_mesh.Positions.Count + _mesh.Normals.Count + _mesh.TexCoords.Count + _mesh.TextureId.Count)+1;
+            GL.BufferData(BufferTarget.ArrayBuffer, bufferSize, new float[bufferSize], BufferUsageHint.StaticDraw);
 
             GL.BufferSubData(BufferTarget.ArrayBuffer, new IntPtr(0), sizeof(float) * _mesh.Positions.Count, _mesh.Positions.ToArray());
             GL.BufferSubData(BufferTarget.ArrayBuffer, new IntPtr(sizeof(float) * _mesh.Positions.Count), sizeof(float) * _mesh.Normals.Count, _mesh.Normals.ToArray());
             GL.BufferSubData(BufferTarget.ArrayBuffer, new IntPtr(sizeof(float) * (_mesh.Positions.Count + _mesh.Normals.Count)), sizeof(float) * _mesh.TexCoords.Count, _mesh.TexCoords.ToArray());
             GL.BufferSubData(BufferTarget.ArrayBuffer, new IntPtr(sizeof(float) * (_mesh.Positions.Count + _mesh.Normals.Count + _mesh.TexCoords.Count)), sizeof(float) * _mesh.TextureId.Count, _mesh.TextureId.ToArray());
 
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
+            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, sizeof(float) * _mesh.Positions.Count);
+            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(float) * 2, sizeof(float) * (_mesh.Positions.Count + _mesh.Normals.Count));
+            GL.VertexAttribPointer(3, 1, VertexAttribPointerType.Float, false, sizeof(float) * 1, sizeof(float) * (_mesh.Positions.Count + _mesh.Normals.Count + _mesh.TexCoords.Count));
+            GL.EnableVertexAttribArray(0);
+            GL.EnableVertexAttribArray(1);
+            GL.EnableVertexAttribArray(2);
+            GL.EnableVertexAttribArray(3);
         }
 
         public void Render()
         {
 
-            GL.BindVertexArray(_vao);
-
-            if (_needsRebuild)
+            if (_wasModified)
             {
                 GenerateMesh();
-                _needsRebuild = false;
             }
-            
+
+            GL.BindVertexArray(_vao);
+            _vbo.Bind();
             GL.DrawArrays(PrimitiveType.Triangles, 0, _mesh.Positions.Count/3);
         }
 
@@ -123,11 +119,29 @@ namespace Blockgame.World
             return _blocks[x, y, z];
         }
 
-        public void SetBlock(Block block, int x, int y, int z)
+        public void ReplaceBlock(BlockType blockType, int x, int y, int z)
         {
-            _blocks[x, y, z] = block;
-            _needsRebuild = true;
+            _blocks[x, y, z].Disabled = false;
+            _blocks[x, y, z].Type = blockType;
+
+            _wasModified = true;
         }
+        public void PlaceBlock(BlockType blockType, int x, int y, int z)
+        {
+            if (!_blocks[x, y, z].Disabled)
+                return;
+
+            ReplaceBlock(blockType, x, y, z);
+
+        }
+
+        public void DestroyBlock(int x, int y, int z)
+        {
+            _blocks[x, y, z].Disabled = true;
+            _wasModified = true;
+        }
+
+        // Disposing
 
         ~Chunk()
         {

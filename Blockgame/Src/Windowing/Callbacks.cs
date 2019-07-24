@@ -18,7 +18,6 @@ namespace Blockgame.Windowing
         public void OnEvent(Event @event)
         {
             _layerStack.OnEvent(@event);
-
         }
         protected override void OnResize(EventArgs @event)
         {

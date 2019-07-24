@@ -15,7 +15,7 @@ namespace Blockgame.Resources
         private bool _disposed = false;
 
         // Create texture from path.
-        public TextureArray(string path, int width, int height, int layerCount)
+        public TextureArray(string path, int layerCount)
         {
 
             _textureId = GL.GenTexture();
@@ -30,6 +30,8 @@ namespace Blockgame.Resources
                     ImageLockMode.ReadOnly,
                     System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
+                int width = image.Width;
+                int height = image.Height / layerCount;
                 GL.TexImage3D(TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgb8, width, height, layerCount, 0, OpenTK.Graphics.OpenGL4.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
 
 

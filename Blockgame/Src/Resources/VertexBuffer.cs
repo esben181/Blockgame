@@ -22,6 +22,10 @@ namespace Blockgame.Resources
             GL.BindBuffer(BufferTarget.ArrayBuffer, _vboId);
         }
 
+        public void Clear()
+        {
+        }
+
         ~VertexBuffer()
         {
             Dispose(false);
