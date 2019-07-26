@@ -31,22 +31,22 @@ namespace Blockgame.Layers
             KeyboardState input = Keyboard.GetState();
             if (input.IsKeyDown(Key.W))
                 _camera.Position += _camera.Front * 5f * deltaTime;
-            if (input.IsKeyDown(Key.S))               
+            if (input.IsKeyDown(Key.S))
                 _camera.Position -= _camera.Front * 5f * deltaTime;
-            if (input.IsKeyDown(Key.D))               
+            if (input.IsKeyDown(Key.D))
                 _camera.Position += _camera.Right * 5f * deltaTime;
-            if (input.IsKeyDown(Key.A))               
+            if (input.IsKeyDown(Key.A))
                 _camera.Position -= _camera.Right * 5f * deltaTime;
 
-            
+
             var mouse = Mouse.GetState();
             if (mouse.IsButtonDown(MouseButton.Left))
             {
-                _chunkManager.DestroyBlock(_camera.Position);
+                _chunkManager.DestroyBlock(_camera.Position + _camera.Front);
             }
             if (mouse.IsButtonDown(MouseButton.Right))
             {
-                _chunkManager.PlaceBlock(BlockType.Dirt, _camera.Position);
+                _chunkManager.PlaceBlock(BlockType.Dirt, _camera.Position + _camera.Front);
             }
             if (input.IsKeyUp(Key.AltLeft))
             {
@@ -72,7 +72,7 @@ namespace Blockgame.Layers
         {
 
             _chunkManager.Render(_camera);
-            
+
 
         }
 

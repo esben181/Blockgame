@@ -1,9 +1,11 @@
 ﻿using System;
 
+
 using OpenTK;
 using OpenTK.Graphics.OpenGL4;
 
 using Blockgame.Resources;
+using Blockgame.Extensions;
 
 namespace Blockgame.World
 {
@@ -66,7 +68,7 @@ namespace Blockgame.World
                     {
                         if (!_blocks[x, y, z].Disabled)
                         {
-                            if (!(x > 0 && x < Size - 1 && y > 0 && y < Size - 1 && z > 0 && z < Size - 1 && !_blocks[x - 1, y, z].Disabled && !_blocks[x + 1, y, z].Disabled && !_blocks[x, y - 1, z].Disabled && !_blocks[x, y + 1, z].Disabled && !_blocks[x, y, z - 1].Disabled && !_blocks[x, y, z + 1].Disabled))
+                            //if (!(x > 0 && x < Size - 1 && y > 0 && y < Size - 1 && z > 0 && z < Size - 1 && !_blocks[x - 1, y, z].Disabled && !_blocks[x + 1, y, z].Disabled && !_blocks[x, y - 1, z].Disabled && !_blocks[x, y + 1, z].Disabled && !_blocks[x, y, z - 1].Disabled && !_blocks[x, y, z + 1].Disabled))
                             {
                                 _mesh.Update(BlockMesh.GetFace(BlockFace.Front, _blocks[x, y, z].Type), x, y, z);
                                 _mesh.Update(BlockMesh.GetFace(BlockFace.Back, _blocks[x, y, z].Type), x, y, z);
@@ -114,31 +116,37 @@ namespace Blockgame.World
             GL.DrawArrays(PrimitiveType.Triangles, 0, _mesh.Positions.Count/3);
         }
 
+        // This method is not array-bound safe
         public Block GetBlock(int x, int y, int z)
         {
             return _blocks[x, y, z];
         }
 
-        public void ReplaceBlock(BlockType blockType, int x, int y, int z)
-        {
-            _blocks[x, y, z].Disabled = false;
-            _blocks[x, y, z].Type = blockType;
-
-            _wasModified = true;
-        }
         public void PlaceBlock(BlockType blockType, int x, int y, int z)
         {
-            if (!_blocks[x, y, z].Disabled)
-                return;
+            // Check if the block-space is available
+            if (_blocks.TryGetValue(x, y, z, out var block))
+            {
+                if (block.Disabled)
+                {
+                    block.Type = blockType;
+                    _wasModified = true;
 
-            ReplaceBlock(blockType, x, y, z);
+                }
+            }
 
         }
 
         public void DestroyBlock(int x, int y, int z)
         {
-            _blocks[x, y, z].Disabled = true;
-            _wasModified = true;
+
+            if (_blocks.TryGetValue(x, y, z, out var block))
+            {
+                block.Disabled = true;
+                _wasModified = true;
+
+            }
+
         }
 
         // Disposing

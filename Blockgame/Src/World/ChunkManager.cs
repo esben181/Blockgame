@@ -67,13 +67,7 @@ namespace Blockgame.World
             }
         }
 
-        public class BlockLocation
-        {
-            public Vector3 ChunkIndex;
-            public Vector3 BlockIndex;
-        }
-
-        public BlockLocation GetBlock(Vector3 worldPosition)
+        public (Vector3 chunkPos, Vector3 blockPos) GetBlock(Vector3 worldPosition)
         {
             int chunkX = (int)Math.Floor(worldPosition.X / Chunk.Size);
             int chunkY = (int)Math.Floor(worldPosition.Y / Chunk.Size);
@@ -85,21 +79,27 @@ namespace Blockgame.World
 
             //Console.WriteLine($"Accessing block ({blockX}, {blockY}, {blockZ}) in chunk ({chunkX}, {chunkY}, {chunkZ}). World position is {worldPosition}");
 
-            return new BlockLocation() { ChunkIndex = new Vector3(chunkX, chunkY, chunkZ), BlockIndex = new Vector3(blockX, blockY, blockZ) };
+            return (new Vector3(chunkX, chunkY, chunkZ), new Vector3(blockX, blockY, blockZ));
         }
 
         public void DestroyBlock(Vector3 worldPosition)
         {
-            BlockLocation location = GetBlock(worldPosition);
+            var (chunkPos, blockPos) = GetBlock(worldPosition);
 
-            _chunkMap[location.ChunkIndex].DestroyBlock((int)location.BlockIndex.X, (int)location.BlockIndex.Y, (int)location.BlockIndex.Z);
+            if(_chunkMap.TryGetValue(chunkPos, out var chunk))
+            {
+                chunk.DestroyBlock((int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z);
+            }
         }
 
         public void PlaceBlock(BlockType blockType, Vector3 worldPosition)
         {
-            BlockLocation location = GetBlock(worldPosition);
+            var (chunkPos, blockPos) = GetBlock(worldPosition);
 
-            _chunkMap[location.ChunkIndex].PlaceBlock(blockType, (int)location.BlockIndex.X, (int)location.BlockIndex.Y, (int)location.BlockIndex.Z);
+            if (_chunkMap.TryGetValue(chunkPos, out var chunk))
+            {
+                chunk.PlaceBlock(blockType, (int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z);
+            }
         }
 
         // Disposing
