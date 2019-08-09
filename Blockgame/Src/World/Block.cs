@@ -1,27 +1,32 @@
-﻿using System;
-
+﻿
 namespace Blockgame.World
 {
-    public enum BlockType
+    public enum BlockMaterial : byte
     {
-        Debug = 0,
+        Empty = 0,
+        Construction,
         Stone,
         Grass,
         Dirt,
-        NumberOfBlocks
     }
 
     public class Block
     {
-        public Block(BlockType type = BlockType.Debug, bool disabled = true)
+        public Block(BlockMaterial material = BlockMaterial.Empty)
         {
-            Type = type;
-            Disabled = disabled;
-            
+            Material = material;
         }
-        public bool Disabled { get; set; }
 
-        public BlockType Type { get; set; }
+        public bool Equals(Block other)
+        {
+            return Material == other.Material;
+        }
+
+        public bool IsEmpty()
+        {
+            return Material == BlockMaterial.Empty;
+        }
+        public BlockMaterial Material { get; set; }
 
     }
 }

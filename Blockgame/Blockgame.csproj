@@ -74,7 +74,7 @@
     <Compile Include="src\Program.cs" />
     <Compile Include="src\Resources\Shader.cs" />
     <Compile Include="src\Windowing\Callbacks.cs" />
-    <Compile Include="src\World\ChunkManager.cs" />
+    <Compile Include="src\World\Map.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

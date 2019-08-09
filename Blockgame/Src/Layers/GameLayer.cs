@@ -1,6 +1,7 @@
 ﻿using System;
 using OpenTK;
 using OpenTK.Input;
+using OpenTK.Graphics.OpenGL4;
 
 using Blockgame.Events;
 using Blockgame.Resources;
@@ -13,13 +14,15 @@ namespace Blockgame.Layers
 
         private Camera _camera;
 
-        private ChunkManager _chunkManager;
+        private Map _chunkManager;
 
         private Vector2 _previousMousePosition;
 
+        bool _wireFrameMode = false;
         public override void Load()
         {
-            _chunkManager = new ChunkManager();
+
+            _chunkManager = new Map();
 
             _camera = new Camera(Vector3.Zero, 800 / (float)600);
 
@@ -38,16 +41,32 @@ namespace Blockgame.Layers
             if (input.IsKeyDown(Key.A))
                 _camera.Position -= _camera.Right * 5f * deltaTime;
 
+            if (input.IsKeyDown(Key.F3))
+            {
+                // Normal fill mode
+                if (!_wireFrameMode) 
+                {
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                }
+                else
+                {
+                    GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+
+                }
+                _wireFrameMode = !_wireFrameMode;
+            }
 
             var mouse = Mouse.GetState();
+            var target = _camera.Position + (_camera.Front * 2);
             if (mouse.IsButtonDown(MouseButton.Left))
             {
-                _chunkManager.DestroyBlock(_camera.Position + _camera.Front);
+                _chunkManager.DestroyBlock(target);
             }
             if (mouse.IsButtonDown(MouseButton.Right))
             {
-                _chunkManager.PlaceBlock(BlockType.Dirt, _camera.Position + _camera.Front);
+                _chunkManager.PlaceBlock(BlockMaterial.Stone, target);
             }
+
             if (input.IsKeyUp(Key.AltLeft))
             {
                 float deltaX = mouse.X - _previousMousePosition.X;

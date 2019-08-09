@@ -42,11 +42,6 @@ namespace Blockgame.Resources
             if (_disposed)
                 return;
 
-            if (disposing)
-            {
-
-            }
-
             GL.DeleteBuffer(_vboId);
         }
     }
