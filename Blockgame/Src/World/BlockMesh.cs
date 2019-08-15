@@ -21,16 +21,7 @@ namespace Blockgame.World
 
         bool _disposed = false;
 
-        public enum Face
-        {
-            None = 0,
-            Top,
-            Bottom,
-            Right,
-            Left,
-            Back,
-            Front
-        }
+        
         public BlockMesh()
         {
             _vao = GL.GenVertexArray();
@@ -54,6 +45,7 @@ namespace Blockgame.World
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, 0);
             GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, sizeof(float) * 3, sizeof(float) * Positions.Count);
             GL.VertexAttribPointer(2, 1, VertexAttribPointerType.Float, false, sizeof(float) * 1, sizeof(float) * (Positions.Count + Normals.Count));
+
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
             GL.EnableVertexAttribArray(2);
@@ -76,37 +68,39 @@ namespace Blockgame.World
         }
 
         // AppendQuad(top-left, top-right, bottom-left, bottom-right);
-        public void AppendQuad(Vector3 topLeft, Vector3 topRight, Vector3 bottomLeft, Vector3 bottomRight, Face face, BlockMaterial material)
+        public void AppendQuad(Vector3 topLeft, Vector3 topRight, Vector3 bottomLeft, Vector3 bottomRight, BlockFace face, Block block)
         {
-            TextureId.Add((int)material);
-            TextureId.Add((int)material);
-            TextureId.Add((int)material);
-            TextureId.Add((int)material);
-            TextureId.Add((int)material);
-            TextureId.Add((int)material);
+            var textureLayer = BlockRegistry.GetData(block.Kind).Faces[(int)face]+1;
+            TextureId.Add(textureLayer);
+            TextureId.Add(textureLayer);
+            TextureId.Add(textureLayer);
+            TextureId.Add(textureLayer);
+            TextureId.Add(textureLayer);
+            TextureId.Add(textureLayer);
 
-            Positions.Add(topLeft.X);
-            Positions.Add(topLeft.Y);
-            Positions.Add(topLeft.Z);
-            Positions.Add(bottomLeft.X );
-            Positions.Add(bottomLeft.Y );
-            Positions.Add(bottomLeft.Z );
-            Positions.Add(bottomRight.X );
-            Positions.Add(bottomRight.Y );
-            Positions.Add(bottomRight.Z );
-            Positions.Add(topLeft.X );
-            Positions.Add(topLeft.Y );
-            Positions.Add(topLeft.Z );
-            Positions.Add(bottomRight.X );
-            Positions.Add(bottomRight.Y );
-            Positions.Add(bottomRight.Z );
-            Positions.Add(topRight.X );
-            Positions.Add(topRight.Y );
-            Positions.Add(topRight.Z );
+
+            Positions.Add(topLeft.X * Chunk.BlockSize);
+            Positions.Add(topLeft.Y * Chunk.BlockSize);
+            Positions.Add(topLeft.Z * Chunk.BlockSize);
+            Positions.Add(bottomLeft.X * Chunk.BlockSize);
+            Positions.Add(bottomLeft.Y * Chunk.BlockSize);
+            Positions.Add(bottomLeft.Z * Chunk.BlockSize);
+            Positions.Add(bottomRight.X * Chunk.BlockSize);
+            Positions.Add(bottomRight.Y * Chunk.BlockSize);
+            Positions.Add(bottomRight.Z * Chunk.BlockSize);
+            Positions.Add(topLeft.X * Chunk.BlockSize);
+            Positions.Add(topLeft.Y * Chunk.BlockSize);
+            Positions.Add(topLeft.Z * Chunk.BlockSize);
+            Positions.Add(bottomRight.X * Chunk.BlockSize);
+            Positions.Add(bottomRight.Y * Chunk.BlockSize);
+            Positions.Add(bottomRight.Z * Chunk.BlockSize);
+            Positions.Add(topRight.X * Chunk.BlockSize);
+            Positions.Add(topRight.Y * Chunk.BlockSize);
+            Positions.Add(topRight.Z * Chunk.BlockSize);
 
             switch (face)
             {
-                case Face.Top:
+                case BlockFace.Top:
                     Normals.Add(0.0f);
                     Normals.Add(1.0f);
                     Normals.Add(0.0f);
@@ -132,7 +126,7 @@ namespace Blockgame.World
                     Normals.Add(0.0f);
 
                     break;
-                case Face.Bottom:
+                case BlockFace.Bottom:
                     Normals.Add(0.0f);
                     Normals.Add(-1.0f);
                     Normals.Add(0.0f);
@@ -158,7 +152,7 @@ namespace Blockgame.World
                     Normals.Add(0.0f);
 
                     break;
-                case Face.Front:
+                case BlockFace.Front:
 
                     Normals.Add(0.0f);
                     Normals.Add(0.0f);
@@ -185,7 +179,7 @@ namespace Blockgame.World
                     Normals.Add(-1.0f);
 
                     break;
-                case Face.Back:
+                case BlockFace.Back:
                     Normals.Add(0.0f);
                     Normals.Add(0.0f);
                     Normals.Add(1.0f);
@@ -211,7 +205,7 @@ namespace Blockgame.World
                     Normals.Add(1.0f);
                     break;
 
-                case Face.Right:
+                case BlockFace.Right:
                     Normals.Add(1.0f);
                     Normals.Add(0.0f);
                     Normals.Add(0.0f);
@@ -237,7 +231,7 @@ namespace Blockgame.World
                     Normals.Add(0.0f);
                     break;
 
-                case Face.Left:
+                case BlockFace.Left:
 
                     Normals.Add(-1.0f);
                     Normals.Add(0.0f);

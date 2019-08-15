@@ -19,9 +19,10 @@ namespace Blockgame.Layers
         private Vector2 _previousMousePosition;
 
         bool _wireFrameMode = false;
+        BlockKind _buildingBlock = BlockKind.Grass;
+
         public override void Load()
         {
-
             _chunkManager = new Map();
 
             _camera = new Camera(Vector3.Zero, 800 / (float)600);
@@ -55,16 +56,32 @@ namespace Blockgame.Layers
                 }
                 _wireFrameMode = !_wireFrameMode;
             }
+            if (input.IsKeyDown(Key.Number1))
+            {
+                _buildingBlock = BlockKind.Grass;
+            }
+            else if (input.IsKeyDown(Key.Number2))
+            {
+                _buildingBlock = BlockKind.Wood;
+            }
+            else if (input.IsKeyDown(Key.Number3))
+            {
+                _buildingBlock = BlockKind.Stone;
+            }
+            else if (input.IsKeyDown(Key.Number4))
+                _buildingBlock = BlockKind.Mushroom;
+            else if (input.IsKeyDown(Key.Number5))
+                _buildingBlock = BlockKind.MushroomStem;
 
             var mouse = Mouse.GetState();
-            var target = _camera.Position + (_camera.Front * 2);
+            var target = _camera.Position + (_camera.Front * 2.0f);
             if (mouse.IsButtonDown(MouseButton.Left))
             {
                 _chunkManager.DestroyBlock(target);
             }
             if (mouse.IsButtonDown(MouseButton.Right))
             {
-                _chunkManager.PlaceBlock(BlockMaterial.Stone, target);
+                _chunkManager.PlaceBlock(_buildingBlock, target);
             }
 
             if (input.IsKeyUp(Key.AltLeft))

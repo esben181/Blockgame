@@ -1,32 +1,24 @@
-﻿
-namespace Blockgame.World
+﻿namespace Blockgame.World
 {
-    public enum BlockMaterial : byte
-    {
-        Empty = 0,
-        Construction,
-        Stone,
-        Grass,
-        Dirt,
-    }
-
+    
     public class Block
     {
-        public Block(BlockMaterial material = BlockMaterial.Empty)
+        public BlockKind Kind { get; set; }
+
+        public Block(BlockKind kind = BlockKind.Air)
         {
-            Material = material;
+            Kind = kind;
         }
 
         public bool Equals(Block other)
         {
-            return Material == other.Material;
+            return Kind == other.Kind;
         }
 
-        public bool IsEmpty()
+        public bool IsAir()
         {
-            return Material == BlockMaterial.Empty;
+            return Kind == BlockKind.Air;
         }
-        public BlockMaterial Material { get; set; }
 
     }
 }

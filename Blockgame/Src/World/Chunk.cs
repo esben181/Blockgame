@@ -2,16 +2,16 @@
 
 
 using OpenTK;
-using OpenTK.Graphics.OpenGL4;
 
-using Blockgame.Resources;
 using Blockgame.Extensions;
 
 namespace Blockgame.World
 {
+
     public class Chunk : IDisposable
     {
         public readonly static int ChunkSize = 16;
+        public readonly static float BlockSize =  1f;
 
         Block[,,] _blocks = new Block[ChunkSize, ChunkSize, ChunkSize];
 
@@ -24,6 +24,8 @@ namespace Blockgame.World
 
         bool _disposed = false;
 
+
+
         public Chunk(int i, int j, int k, Map map)
         {
             ChunkPosX = i * ChunkSize;
@@ -34,6 +36,7 @@ namespace Blockgame.World
 
             _mesh = new BlockMesh();
             Setup();
+            
         }
 
         public void Setup()
@@ -45,13 +48,15 @@ namespace Blockgame.World
                 {
                     for (int y = 0; y < ChunkSize; ++y)
                     {
-                        _blocks[x, y, z] = new Block(BlockMaterial.Empty);
+                        _blocks[x, y, z] = new Block(BlockKind.Air);
                         //if (Math.Sqrt((float)(x - ChunkSize / 2) * (x - ChunkSize / 2) + (y - ChunkSize / 2) * (y - ChunkSize / 2) + (z - ChunkSize / 2) * (z - ChunkSize / 2)) <= ChunkSize / 2)
                         {
                             if (y < ChunkSize/2)
-                                _blocks[x, y, z].Material = BlockMaterial.Grass;
+                                _blocks[x, y, z].Kind = BlockKind.Grass;
                             if (y < ChunkSize/2-1)
-                                _blocks[x, y, z].Material = BlockMaterial.Dirt;
+                                _blocks[x, y, z].Kind = BlockKind.Dirt;
+                            if (y < ChunkSize / 2 - 3)
+                                _blocks[x, y, z].Kind = BlockKind.Stone;
 
 
                         }
@@ -71,7 +76,7 @@ namespace Blockgame.World
         {
             int i, j, k, l, w, h, u, v, r, s, t;
             Block[] mask = new Block[ChunkSize * ChunkSize];
-            BlockMesh.Face face = BlockMesh.Face.None;
+            BlockFace face;
 
             for (bool backFace = true, b = false; b != backFace; backFace = backFace && b, b = !b)
             {
@@ -88,11 +93,11 @@ namespace Blockgame.World
 
 
                     if (d == 0)
-                        face = backFace ? BlockMesh.Face.Right : BlockMesh.Face.Left;
+                        face = backFace ? BlockFace.Left : BlockFace.Right;
                     else if (d == 1)
-                        face = backFace ? BlockMesh.Face.Top : BlockMesh.Face.Bottom;
-                    else if (d == 2)
-                        face = backFace ? BlockMesh.Face.Front : BlockMesh.Face.Back;
+                        face = backFace ? BlockFace.Bottom : BlockFace.Top;
+                    else
+                        face = backFace ? BlockFace.Back : BlockFace.Front;
 
                     // Run thru each slice (d) of the chunk
                     for (x[d] = -1; x[d] < ChunkSize;)
@@ -110,7 +115,7 @@ namespace Blockgame.World
                                 Block blockCompare = (x[d] < ChunkSize - 1) ? _map.GetblockAt(x[0] + q[0] + ChunkPosX, x[1] + q[1] + ChunkPosY, x[2] + q[2] + ChunkPosZ) : new Block();
 
                                 //Mask is set to true if there is a visible face between two blocks
-                                mask[n++] = (!blockCurrent.IsEmpty() && !blockCompare.IsEmpty() && blockCurrent.Equals(blockCompare))
+                                mask[n++] = (!blockCurrent.IsAir() && !blockCompare.IsAir() && blockCurrent.Equals(blockCompare))
                                     ? new Block() : backFace ? blockCompare : blockCurrent;
                             }
                         }
@@ -124,11 +129,11 @@ namespace Blockgame.World
                         {
                             for (i = 0; i < ChunkSize;)
                             {
-                                if (!mask[n].IsEmpty())
+                                if (!mask[n].IsAir())
                                 {
                                     // Compute width of quad and store it in w
                                     // This is done by seraching along the current axis until mask[n + w] is false
-                                    for (w = 1; i + w < ChunkSize && !mask[n + w].IsEmpty() && mask[n + w].Equals(mask[n]); ++w) { }
+                                    for (w = 1; i + w < ChunkSize && !mask[n + w].IsAir() && mask[n + w].Equals(mask[n]); ++w) { }
 
 
                                     var done = false;
@@ -138,7 +143,7 @@ namespace Blockgame.World
                                         for (k = 0; k < w; ++k)
                                         {
                                             // Exit if there's a hole in the mask
-                                            if (mask[n + k + h * ChunkSize].IsEmpty() || !mask[n + k + h * ChunkSize].Equals(mask[n]))
+                                            if (mask[n + k + h * ChunkSize].IsAir() || !mask[n + k + h * ChunkSize].Equals(mask[n]))
                                             {
                                                 done = true;
                                                 break;
@@ -170,7 +175,7 @@ namespace Blockgame.World
                                                      new Vector3(r + dv[0], s + dv[1], t + dv[2]),
                                                      new Vector3(r + du[0] + dv[0], s + du[1] + dv[1], t + du[2] + dv[2]),
                                                      face,
-                                                     mask[n].Material
+                                                     mask[n]
                                                      );
                                     // Zero-out mask
                                     for (l = 0; l < h; ++l)
@@ -206,18 +211,18 @@ namespace Blockgame.World
             }
             else
             {
-                return new Block(BlockMaterial.Empty);
+                return new Block(BlockKind.Air);
             }
         }
 
-        public void PlaceBlock(BlockMaterial blockMaterial, int i, int j, int k)
+        public void PlaceBlock(BlockKind kind, int i, int j, int k)
         {
             // Check if the block-space is available
             if (_blocks.TryGetValue(i, j, k, out var block))
             {
-                if (block.Material == BlockMaterial.Empty)
+                if (block.Kind == BlockKind.Air)
                 {
-                    block.Material = blockMaterial;
+                    block.Kind = kind;
                     GenerateMesh();
 
                 }
@@ -230,7 +235,7 @@ namespace Blockgame.World
 
             if (_blocks.TryGetValue(i, j, k, out var block))
             {
-                block.Material = BlockMaterial.Empty;
+                block.Kind = BlockKind.Air;
                 GenerateMesh();
             }
         }

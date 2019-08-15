@@ -35,18 +35,18 @@ vec2 GetTextureCoord(vec3 normal)
 {
 	if (abs(normal.y) == 1)
 	{
-		return v_fragPos.xz;
+		return -v_fragPos.xz;
 	}
 	else if(abs(normal.x) == 1)
 	{
-		return v_fragPos.zy;
+		return -v_fragPos.zy;
 	}
 	else if (normal.z == 1)
 	{
-		return v_fragPos.xy;
+		return -v_fragPos.xy;
 	}
 	else
 	{
-		return v_fragPos.xy;
+		return -v_fragPos.xy;
 	}
 }

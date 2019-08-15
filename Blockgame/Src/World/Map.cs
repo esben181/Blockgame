@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using Blockgame.Resources;
 using OpenTK;
+using OpenTK.Graphics.OpenGL4;
 
 namespace Blockgame.World
 {
@@ -13,22 +14,30 @@ namespace Blockgame.World
         public static readonly int MapDepth = 3;
 
         Shader _shader;
-        TextureArray _textureArray;
 
         Dictionary<Vector3, Chunk> _chunks;
+        TextureArray _textureArray;
 
+        
         bool _disposed = false;
 
          
         public Map()
         {
+            // Todo: load required block types from file.
+            BlockRegistry.RegisterBlockType(BlockKind.Wood, new BlockKindData(4, 4, 3, 3, 3, 3));
+            BlockRegistry.RegisterBlockType(BlockKind.Grass, new BlockKindData(1, 0, 2, 2, 2, 2));
+            BlockRegistry.RegisterBlockType(BlockKind.Stone, new BlockKindData(5, 5, 5, 5, 5, 5));
+            BlockRegistry.RegisterBlockType(BlockKind.Dirt, new BlockKindData(0,0,0,0,0,0));
+            BlockRegistry.RegisterBlockType(BlockKind.Mushroom, new BlockKindData(6, 6, 6, 6, 6, 6));
+            BlockRegistry.RegisterBlockType(BlockKind.MushroomStem, new BlockKindData(7, 7, 7, 7, 7, 7));
+
             GenerateChunks();
 
             _shader = new Shader("Shaders/block.vert", "Shaders/block.frag");
             _shader.Bind();
 
             _textureArray = new TextureArray("Textures/map.png", 128, 128);
-            _textureArray.Bind();
 
         }
 
@@ -37,14 +46,12 @@ namespace Blockgame.World
             _chunks = new Dictionary<Vector3, Chunk>();
 
             for (var x = -2; x < MapWidth-2; ++x)
-                for (var y = -2; y < MapHeight-2; ++y)
+                for (var y = 0; y < MapHeight; ++y)
                     for (var z = -2; z < MapDepth-2;  ++z)
                     {
                         _chunks.Add(new Vector3(x, y, z), new Chunk(x, y, z, this));
                         _chunks[new Vector3(x, y, z)].GenerateMesh();
                     }
-
-            
         }
 
         public void Render(Camera camera)
@@ -58,7 +65,7 @@ namespace Blockgame.World
 
             foreach (var entry in _chunks)
             {
-                Vector3 position = entry.Key * Chunk.ChunkSize;
+                Vector3 position = entry.Key * Chunk.ChunkSize * Chunk.BlockSize;
 
                 _shader.SetMatrix4("u_model", Matrix4.CreateTranslation(position));
                 entry.Value.Render();
@@ -102,13 +109,13 @@ namespace Blockgame.World
             }
         }
 
-        public void PlaceBlock(BlockMaterial blockMaterial, Vector3 worldPosition)
+        public void PlaceBlock(BlockKind kind, Vector3 worldPosition)
         {
             var (chunkPos, blockPos) = GetBlockLocation(worldPosition);
 
             if (_chunks.TryGetValue(chunkPos, out var chunk))
             {
-                chunk.PlaceBlock(blockMaterial, (int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z);
+                chunk.PlaceBlock(kind, (int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z);
             }
         }
 
@@ -117,7 +124,7 @@ namespace Blockgame.World
             var (chunkPos, blockPos) = GetBlockLocation(new Vector3(x, y, z));
             if (_chunks.TryGetValue(chunkPos, out var chunk))
             {
-                if (chunk.GetBlock((int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z).Material != BlockMaterial.Empty)
+                if (chunk.GetBlock((int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z).Kind != BlockKind.Air)
                 {
                     return true;
                 }
@@ -126,7 +133,6 @@ namespace Blockgame.World
 
         }
 
-        // Disposing
 
         public void Dispose()
         {
