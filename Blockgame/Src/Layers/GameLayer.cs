@@ -12,20 +12,21 @@ namespace Blockgame.Layers
     public class GameLayer : Layer
     {
 
-        private Camera _camera;
+        Camera _camera;
 
-        private Map _chunkManager;
+        Map _gameWorld;
 
-        private Vector2 _previousMousePosition;
+        Vector2 _previousMousePosition;
 
         bool _wireFrameMode = false;
         BlockKind _buildingBlock = BlockKind.Grass;
 
         public override void Load()
         {
-            _chunkManager = new Map();
+            
+            _gameWorld = new Map();
 
-            _camera = new Camera(Vector3.Zero, 800 / (float)600);
+            _camera = new Camera(new Vector3(0, 16-2, 0), 800 / (float)600);
 
             _previousMousePosition = Vector2.Zero;
         }
@@ -77,11 +78,11 @@ namespace Blockgame.Layers
             var target = _camera.Position + (_camera.Front * 2.0f);
             if (mouse.IsButtonDown(MouseButton.Left))
             {
-                _chunkManager.DestroyBlock(target);
+                _gameWorld.DamageBlock(target, 0.5f);
             }
             if (mouse.IsButtonDown(MouseButton.Right))
             {
-                _chunkManager.PlaceBlock(_buildingBlock, target);
+                _gameWorld.PlaceBlock(_buildingBlock, target);
             }
 
             if (input.IsKeyUp(Key.AltLeft))
@@ -94,6 +95,8 @@ namespace Blockgame.Layers
                 _camera.Yaw += deltaX * 0.2f;
 
             }
+
+            _gameWorld.Update();
         }
 
         public override void OnEvent(Event @event)
@@ -106,16 +109,13 @@ namespace Blockgame.Layers
 
         public override void Render()
         {
-
-            _chunkManager.Render(_camera);
-
+            _gameWorld.Render(_camera);
 
         }
 
         public override void Unload()
         {
-            _chunkManager.Dispose();
-
+            _gameWorld.Dispose();
         }
     }
 }

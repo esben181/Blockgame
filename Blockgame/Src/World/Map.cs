@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using Blockgame.Resources;
 using OpenTK;
-using OpenTK.Graphics.OpenGL4;
 
 namespace Blockgame.World
 {
@@ -25,12 +24,12 @@ namespace Blockgame.World
         public Map()
         {
             // Todo: load required block types from file.
-            BlockRegistry.RegisterBlockType(BlockKind.Wood, new BlockKindData(4, 4, 3, 3, 3, 3));
-            BlockRegistry.RegisterBlockType(BlockKind.Grass, new BlockKindData(1, 0, 2, 2, 2, 2));
-            BlockRegistry.RegisterBlockType(BlockKind.Stone, new BlockKindData(5, 5, 5, 5, 5, 5));
-            BlockRegistry.RegisterBlockType(BlockKind.Dirt, new BlockKindData(0,0,0,0,0,0));
-            BlockRegistry.RegisterBlockType(BlockKind.Mushroom, new BlockKindData(6, 6, 6, 6, 6, 6));
-            BlockRegistry.RegisterBlockType(BlockKind.MushroomStem, new BlockKindData(7, 7, 7, 7, 7, 7));
+            BlockRegistry.RegisterBlockType(BlockKind.Wood, new BlockKindData(Color.Orange.Normalize(), health: 10));
+            BlockRegistry.RegisterBlockType(BlockKind.Grass, new BlockKindData(Color.LawnGreen.Normalize()));
+            BlockRegistry.RegisterBlockType(BlockKind.Stone, new BlockKindData(Color.Gray.Normalize(), health: 10));
+            BlockRegistry.RegisterBlockType(BlockKind.Dirt, new BlockKindData(Color.Brown.Normalize()));
+            BlockRegistry.RegisterBlockType(BlockKind.Mushroom, new BlockKindData(Color.Purple.Normalize(), 1, 1, 1, 1, 1, 1));
+            BlockRegistry.RegisterBlockType(BlockKind.MushroomStem, new BlockKindData(Color.White.Normalize()));
 
             GenerateChunks();
 
@@ -45,13 +44,21 @@ namespace Blockgame.World
         {
             _chunks = new Dictionary<Vector3, Chunk>();
 
-            for (var x = -2; x < MapWidth-2; ++x)
+            for (var x = 0; x < MapWidth; ++x)
                 for (var y = 0; y < MapHeight; ++y)
-                    for (var z = -2; z < MapDepth-2;  ++z)
+                    for (var z = -2; z < MapDepth;  ++z)
                     {
                         _chunks.Add(new Vector3(x, y, z), new Chunk(x, y, z, this));
                         _chunks[new Vector3(x, y, z)].GenerateMesh();
                     }
+        }
+
+        public void Update()
+        {
+            foreach (var entry in _chunks)
+            {
+                entry.Value.Update();
+            }
         }
 
         public void Render(Camera camera)
@@ -62,10 +69,11 @@ namespace Blockgame.World
             _shader.SetMatrix4("u_view", camera.GetWorldToViewMatrix());
             _shader.SetMatrix4("u_projection", camera.GetViewToProjectionMatrix());
             _shader.SetVector3("u_lightPos", camera.Position);
+            _shader.SetVector3("u_viewPos", camera.Position);
 
             foreach (var entry in _chunks)
             {
-                Vector3 position = entry.Key * Chunk.ChunkSize * Chunk.BlockSize;
+                Vector3 position = entry.Key * Chunk.ChunkSize;
 
                 _shader.SetMatrix4("u_model", Matrix4.CreateTranslation(position));
                 entry.Value.Render();
@@ -90,13 +98,8 @@ namespace Blockgame.World
         public Block GetblockAt(int x, int y, int z)
         {
             var (chunkPos, blockPos) = GetBlockLocation(new Vector3(x, y, z));
-            if (_chunks.TryGetValue(chunkPos, out var chunk))
-            {
-                return chunk.GetBlock((int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z);
 
-            }
-            return new Block();
-
+            return _chunks[chunkPos].GetBlock((int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z);
         }
 
         public void DestroyBlock(Vector3 worldPosition)
@@ -109,6 +112,16 @@ namespace Blockgame.World
             }
         }
 
+        public void DamageBlock(Vector3 worldPosition, float dmg)
+        {
+            var (chunkPos, blockPos) = GetBlockLocation(worldPosition);
+
+            if (_chunks.TryGetValue(chunkPos, out var chunk))
+            {
+                chunk.DamageBlock((int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z, dmg);
+            }
+        }
+
         public void PlaceBlock(BlockKind kind, Vector3 worldPosition)
         {
             var (chunkPos, blockPos) = GetBlockLocation(worldPosition);
@@ -117,20 +130,6 @@ namespace Blockgame.World
             {
                 chunk.PlaceBlock(kind, (int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z);
             }
-        }
-
-        public bool IsBlockAt(int x, int y, int z)
-        {
-            var (chunkPos, blockPos) = GetBlockLocation(new Vector3(x, y, z));
-            if (_chunks.TryGetValue(chunkPos, out var chunk))
-            {
-                if (chunk.GetBlock((int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z).Kind != BlockKind.Air)
-                {
-                    return true;
-                }
-            }
-            return false;
-
         }
 
 

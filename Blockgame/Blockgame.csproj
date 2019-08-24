@@ -58,7 +58,8 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\Extensions\ArrayExtensions.cs" />
-    <Compile Include="src\Resources\Color3.cs" />
+    <Compile Include="src\Resources\Color.cs" />
+    <Compile Include="src\Resources\PresetColors.cs" />
     <Compile Include="src\World\Block.cs" />
     <Compile Include="src\Camera.cs" />
     <Compile Include="src\World\BlockRegistry.cs" />
@@ -77,11 +78,16 @@
     <Compile Include="src\Resources\Shader.cs" />
     <Compile Include="src\Windowing\Callbacks.cs" />
     <Compile Include="src\World\Map.cs" />
+    <Compile Include="src\World\Skybox.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
+    <None Include="Shaders\block.frag" />
+    <None Include="Shaders\block.vert" />
+    <None Include="Shaders\skybox.frag" />
+    <None Include="Shaders\skybox.vert" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

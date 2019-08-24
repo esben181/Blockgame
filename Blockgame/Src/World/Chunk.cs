@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Collections.Generic;
 
 using OpenTK;
 
@@ -11,9 +11,10 @@ namespace Blockgame.World
     public class Chunk : IDisposable
     {
         public readonly static int ChunkSize = 16;
-        public readonly static float BlockSize =  1f;
 
         Block[,,] _blocks = new Block[ChunkSize, ChunkSize, ChunkSize];
+
+        List<(int i, int j, int k)> _damagedBlocks = new List<(int i, int j, int k)>(); 
 
         // Global chunk position
         public readonly int ChunkPosX, ChunkPosY, ChunkPosZ;
@@ -21,6 +22,8 @@ namespace Blockgame.World
         BlockMesh _mesh;
 
         Map _map;
+
+        bool _needsRebuild = false;
 
         bool _disposed = false;
 
@@ -67,9 +70,10 @@ namespace Blockgame.World
 
         public void GenerateMesh()
         {
-            _mesh.Clear();
+            _mesh.EraseData();
             GreedyMesh();
-            _mesh.Buffer();
+            _mesh.BufferData();
+            _needsRebuild = false;
         }
 
         private void GreedyMesh()
@@ -198,10 +202,7 @@ namespace Blockgame.World
 
         }
 
-        public void Render()
-        {
-            _mesh.Draw();
-        }
+        
 
         public Block GetBlock(int x, int y, int z)
         {
@@ -223,8 +224,8 @@ namespace Blockgame.World
                 if (block.Kind == BlockKind.Air)
                 {
                     block.Kind = kind;
-                    GenerateMesh();
-
+                    block.CurrentHP = BlockRegistry.GetData(kind).Health;
+                    _needsRebuild = true;
                 }
             }
 
@@ -236,8 +237,52 @@ namespace Blockgame.World
             if (_blocks.TryGetValue(i, j, k, out var block))
             {
                 block.Kind = BlockKind.Air;
-                GenerateMesh();
+                _needsRebuild = true;
             }
+        }
+
+        public void DamageBlock(int i, int j, int k, float dmg)
+        {
+
+            if (_blocks.TryGetValue(i, j, k, out var block))
+            {
+                if (block.IsAir())
+                    return;
+
+                block.CurrentHP -= dmg;
+
+                if (block.CurrentHP <= 0)
+                    DestroyBlock(i, j, k);
+                else
+                    _damagedBlocks.Add((i, j, k));
+
+
+                _needsRebuild = true;
+
+            }
+        }
+
+        public void Update()
+        {
+
+            for (var i = 0; i < _damagedBlocks.Count; ++i)
+            {
+                var block = _blocks[_damagedBlocks[i].i, _damagedBlocks[i].j, _damagedBlocks[i].k];
+                block.CurrentHP += 0.0025f;
+                _needsRebuild = true;
+
+                if (block.IsAir() || block.CurrentHP >= BlockRegistry.GetData(block.Kind).Health)
+                    _damagedBlocks.Remove(_damagedBlocks[i]);
+
+            }
+
+            if (_needsRebuild)
+                GenerateMesh();
+        }
+
+        public void Render()
+        {
+            _mesh.Render();
         }
 
         // Disposing

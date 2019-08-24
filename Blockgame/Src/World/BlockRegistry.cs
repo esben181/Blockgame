@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-
+﻿using System;
+using System.Collections.Generic;
+using Blockgame.Resources;
 
 namespace Blockgame.World
 {
@@ -28,9 +29,12 @@ namespace Blockgame.World
     public class BlockKindData
     {
         public readonly int[] Faces;
+        public readonly float Health;
+        public readonly Color Color;
 
-        public BlockKindData(int top = 0, int bottom = 0, int front = 0, int back = 0, int left = 0, int right = 0)
+        public BlockKindData(Color color, int top = 0, int bottom = 0, int front = 0, int back = 0, int left = 0, int right = 0, float health = 5)
         {
+            Color = color;
             Faces = new int[6];
             Faces[(int)BlockFace.Top] = top;
             Faces[(int)BlockFace.Bottom] = bottom;
@@ -38,6 +42,8 @@ namespace Blockgame.World
             Faces[(int)BlockFace.Back] = back;
             Faces[(int)BlockFace.Left] = left;
             Faces[(int)BlockFace.Right] = right;
+
+            Health = health;
         }
     }
     public static class BlockRegistry
