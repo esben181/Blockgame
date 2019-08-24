@@ -15,6 +15,7 @@ namespace Blockgame.Layers
         Camera _camera;
 
         Map _gameWorld;
+        Skybox _skybox;
 
         Vector2 _previousMousePosition;
 
@@ -26,6 +27,16 @@ namespace Blockgame.Layers
             
             _gameWorld = new Map();
 
+            _skybox = new Skybox(new string[] 
+            {
+                "Textures/Skybox/right.jpg",
+                "Textures/Skybox/left.jpg",
+                "Textures/Skybox/top.jpg",
+                "Textures/Skybox/bottom.jpg",
+                "Textures/Skybox/front.jpg",
+                "Textures/Skybox/back.jpg"
+            }
+            );
             _camera = new Camera(new Vector3(0, 16-2, 0), 800 / (float)600);
 
             _previousMousePosition = Vector2.Zero;
@@ -110,12 +121,14 @@ namespace Blockgame.Layers
         public override void Render()
         {
             _gameWorld.Render(_camera);
+            _skybox.Render(_camera);
 
         }
 
         public override void Unload()
         {
             _gameWorld.Dispose();
+            _skybox.Dispose();
         }
     }
 }
